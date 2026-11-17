@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Mission Saditya: The Rescue of Jaanii</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Poppins:wght@400;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      background: #06040e;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 500px;
+      background: #0d091f;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(255, 65, 108, 0.3);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      background: rgba(7, 5, 16, 0.93);
+      backdrop-filter: blur(8px);
+      z-index: 30;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.85rem;
+      background: linear-gradient(90deg, #ff758c, #ff7eb3, #ffd166);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.25rem;
+      color: #ffd166;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 0.9rem;
+      color: #e6deff;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      color: #fff;
+      border: none;
+      padding: 12px 26px;
+      border-radius: 30px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255, 65, 108, 0.45);
+      margin: 5px;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: none;
+    }
+
+    /* HUD */
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge {
+      background: rgba(18, 12, 38, 0.9);
+      border: 1px solid rgba(255, 117, 140, 0.45);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #ffd166;
+      pointer-events: auto;
+    }
+
+    .step-box {
+      background: rgba(14, 9, 30, 0.9);
+      border-left: 3px solid #ff416c;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #fff;
+      text-align: left;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+    }
+
+    /* Cutscene Dialogue Banner */
+    #dialogue-banner {
+      position: absolute;
+      bottom: 145px;
+      left: 14px;
+      right: 14px;
+      background: rgba(18, 11, 36, 0.94);
+      border: 1px solid #ffd166;
+      border-radius: 14px;
+      padding: 12px 14px;
+      text-align: center;
+      z-index: 18;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+    }
+
+    #dialogue-banner p {
+      margin-bottom: 8px;
+      font-size: 0.86rem;
+      color: #fff;
+    }
+
+    /* Joystick & Action */
+    #joystick-zone {
+      position: absolute;
+      bottom: 22px;
+      left: 22px;
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.09);
+      border: 2px solid rgba(255, 117, 140, 0.45);
+      z-index: 20;
+      touch-action: none;
+    }
+
+    #joystick-knob {
+      position: absolute;
+      top: 34px;
+      left: 34px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff758c, #ff416c);
+      box-shadow: 0 0 12px rgba(255, 65, 108, 0.85);
+      pointer-events: none;
+    }
+
+    #action-btn {
+      position: absolute;
+      bottom: 34px;
+      right: 24px;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffd166, #f77f00);
+      border: none;
+      color: #140a26;
+      font-weight: 800;
+      font-size: 0.8rem;
+      box-shadow: 0 0 22px rgba(255, 209, 102, 0.65);
+      z-index: 20;
+    }
+
+    /* Puzzle Panel */
+    .panel-box {
+      background: rgba(22, 14, 46, 0.97);
+      border: 1px solid rgba(255, 126, 179, 0.4);
+      border-radius: 18px;
+      padding: 18px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin: 14px 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      margin: 14px 0;
+    }
+
+    .tile-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #fff;
+      padding: 13px 6px;
+      border-radius: 12px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tile-btn.selected {
+      background: rgba(255, 65, 108, 0.38);
+      border-color: #ff758c;
+      color: #ffd166;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 117, 140, 0.55);
+      background: rgba(10, 7, 22, 0.95);
+      color: #fff;
+      font-size: 1rem;
+      text-align: center;
+      margin: 12px 0;
+      outline: none;
+    }
+
+    #toast {
+      position: absolute;
+      top: 88px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(220, 38, 38, 0.94);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* Final Victory Screen */
+    #final-screen {
+      justify-content: flex-start;
+      overflow-y: auto;
+      padding-top: 22px;
+      padding-bottom: 40px;
+    }
+
+    .gallery-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      width: 100%;
+      padding: 8px 0;
+      margin-bottom: 14px;
+    }
+
+    .gallery-strip img {
+      width: 135px;
+      height: 165px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 2px solid #ffd166;
+      flex-shrink: 0;
+    }
+
+    .letter-box {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 117, 140, 0.45);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: left;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: #f8f5ff;
+      white-space: pre-line;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="toast">Alert</div>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <span class="badge" id="stage-badge">Chapter 1: College</span>
+        <button class="badge" id="music-toggle" onclick="toggleMusic()">🔊 Music: ON</button>
+      </div>
+      <div class="step-box" id="step-instruction">Instruction...</div>
+    </div>
+
+    <!-- Dialogue Banner for Live Animated Scenes -->
+    <div id="dialogue-banner" class="hidden">
+      <p id="dialogue-text"></p>
+      <button class="btn" id="dialogue-btn" onclick="advanceScene()">Aage Badho ➔</button>
+    </div>
+
+    <!-- Touch Joystick & Action Button -->
+    <div id="joystick-zone" class="hidden">
+      <div id="joystick-knob"></div>
+    </div>
+    <button id="action-btn" class="hidden" onclick="handleActionButton()">ACTION</button>
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="screen">
+      <h1>Mission Saditya</h1>
+      <p><strong>The Rescue of Jaanii</strong><br><br>Joystick se <strong>Babe</strong> ko har taraf move karo, hamari pyaari yaadon ko phir se jiyo, aur bina kisi hint ke 5 mushkil padav paar karke <strong>Jaanii</strong> ko bachao!</p>
+      <button class="btn" onclick="startGame()">Play Story & Game ❤️</button>
+    </div>
+
+    <!-- ZERO-HINT PUZZLE OVERLAY -->
+    <div id="puzzle-screen" class="screen hidden">
+      <div class="panel-box" id="puzzle-content"></div>
+    </div>
+
+    <!-- GRAND FINALE & LETTER -->
+    <div id="final-screen" class="screen hidden">
+      <h1>Mission Complete! ❤️</h1>
+      <p style="color:#ffd166; font-weight:600;">Babe ne apne Jaanii ko bacha liya!</p>
+
+      <div class="gallery-strip">
+        <img src="https://i.postimg.cc/Jnjmy3Hw/IMG-20260429-235502-635.jpg" alt="Memory 1" />
+        <img src="https://i.postimg.cc/J4YwzYY1/IMG-20251125-212028-549.jpg" alt="Memory 2" />
+        <img src="https://i.postimg.cc/L6X7wB4d/Gemini-Generated-Image-i9uhppi9uhppi9uh.png" alt="Memory 3" />
+        <img src="https://i.postimg.cc/qR4DL2D5/Gemini-Generated-Image-mwyy9omwyy9omwyy.png" alt="Memory 4" />
+        <img src="https://i.postimg.cc/Dy8jBv5L/Gemini-Generated-Image-ru31tiru31tiru31.png" alt="Memory 5" />
+      </div>
+
+      <div class="letter-box">Sadiya , 
+Yaad hai jab hum dono akele the hum dono ke paas hum dono ke siva koi nhi tha to tu Teri bate mujhe btati thi mai sunta tha meri bate mai tujhe btata tha tu sunti thi par kabhi soche nhi the ki hum dono ek dusre ki bate btate btate khudki ek baat bna lenge mujhe yaad hai ab bhi vo pal jab tune meko purpose ki thi mano jaise ek alag hi chij jispar Visvas kar pana kafi mushkil tha par vo chij huyi kyuki vo uparwala karva rha tha hum dono ek dusre ko nhi dundh rhe the par fir bhi ham mile uske baad kafi sari yade memories hamne jiye hai ikktha kiye h or bht sare pyare pal hamne sath bitaye hai and ab hmara farj h hmara jo rishta bna hai usme khub Sara pyar bharne ka or usko itna jyada pyar se fullfil kar dena ki dono ki soul ek ho jaye ladai bahas har rishte me hoti h but jab man me chije rehne lage to vha rishte me darar aane lagti h tu bhi mere se naraj hoti mai bhi tere se naraj hota par rishta vhi tikta h jo raat ki ladai ko subh yaad na rakhe kuch chije hamesha bolkar hi solve nhi hoti kuch khudse samajhkar or khudko samjhkar bhi solve hoti h jha khudko chup or khudse hi khudko thik kiya jata hai or ye bahas chije to hoti rehngi ye sab chhod main hai hmara pyar hmari dosti inme kabhi kami nhi honi chaiye ham khub ek dusre ko pyar kare or jaise tune mujhe abhi bachai n game me ishi tarah puri zindgi ek dusre ko unki mushibat me bachate rhe I love you so much babe bht jyada pyar h jo words me mai kabhi nhi bta paunga i love you so much.</div>
+    </div>
+  </div>
+
+  <!-- Background Song -->
+  <audio id="bg-audio" loop preload="auto">
+    <source src="https://tmpfiles.org/dl/wXwwESVVo9hs/song.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let W, H;
+
+    function resizeCanvas() {
+      const box = document.getElementById("game-container");
+      W = canvas.width = box.clientWidth;
+      H = canvas.height = box.clientHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // Audio System
+    const bgAudio = document.getElementById("bg-audio");
+    let musicOn = true;
+    let fallbackInterval = null;
+
+    function playFallbackMelody() {
+      if (fallbackInterval) return;
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [261.63, 329.63, 392.00, 523.25, 493.88, 392.00, 329.63, 293.66];
+      let i = 0;
+      fallbackInterval = setInterval(() => {
+        if (!musicOn) return;
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = notes[i % notes.length];
+        gain.gain.setValueAtTime(0.05, actx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 1.1);
+        osc.connect(gain);
+        gain.connect(actx.destination);
+        osc.start();
+        osc.stop(actx.currentTime + 1.1);
+        i++;
+      }, 900);
+    }
+
+    function startAudio() {
+      bgAudio.play().catch(() => playFallbackMelody());
+    }
+
+    function toggleMusic() {
+      musicOn = !musicOn;
+      document.getElementById("music-toggle").innerText = musicOn ? "🔊 Music: ON" : "🔇 Music: OFF";
+      if (musicOn) bgAudio.play().catch(() => {});
+      else bgAudio.pause();
+    }
+
+    function showToast(msg, color = "rgba(220, 38, 38, 0.94)") {
+      const t = document.getElementById("toast");
+      t.style.background = color;
+      t.innerText = msg;
+      t.style.opacity = "1";
+      setTimeout(() => { t.style.opacity = "0"; }, 2200);
+    }
+
+    // Joystick Control
+    let joy = { active: false, dx: 0, dy: 0 };
+    const joyZone = document.getElementById("joystick-zone");
+    const joyKnob = document.getElementById("joystick-knob");
+
+    joyZone.addEventListener("touchstart", handleJoy, { passive: false });
+    joyZone.addEventListener("touchmove", handleJoy, { passive: false });
+    joyZone.addEventListener("touchend", () => {
+      joy.active = false;
+      joy.dx = 0;
+      joy.dy = 0;
+      joyKnob.style.transform = "translate(0px, 0px)";
+    });
+
+    function handleJoy(e) {
+      e.preventDefault();
+      const rect = joyZone.getBoundingClientRect();
+      const touch = e.touches[0];
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      let dx = touch.clientX - cx;
+      let dy = touch.clientY - cy;
+      const dist = Math.hypot(dx, dy);
+      const maxR = 36;
+      if (dist > maxR) {
+        dx = (dx / dist) * maxR;
+        dy = (dy / dist) * maxR;
+      }
+      joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+      joy.active = true;
+      joy.dx = dx / maxR;
+      joy.dy = dy / maxR;
+    }
+
+    // GAME STATES:
+    // 'college' -> 'bus' -> 'cafe' -> 'level1' -> 'level2' -> 'level3' -> 'level4' -> 'level5'
+    let mode = "college";
+    let babe = { x: 0, y: 0, speed: 3.1, inWater: false };
+    let jaanii = { x: 0, y: 0, visible: true };
+    let villain = { x: -100, y: -100, visible: false, phase: 0 };
+    let hearts = [];
+    let roadOffset = 0;
+    let proposed = false;
+    let kidnapped = false;
+    let crocs = [];
+    let stones = [];
+    let roomKeys = [];
+    let keysCollected = [false, false, false];
+    let loopStarted = false;
+
+    function startGame() {
+      startAudio();
+      document.getElementById("start-screen").classList.add("hidden");
+      document.getElementById("hud").classList.remove("hidden");
+      document.getElementById("joystick-zone").classList.remove("hidden");
+      document.getElementById("action-btn").classList.remove("hidden");
+      setupMode("college");
+      if (!loopStarted) {
+        loopStarted = true;
+        gameLoop();
+      }
+    }
+
+    function setupMode(newMode) {
+      mode = newMode;
+      document.getElementById("dialogue-banner").classList.add("hidden");
+      document.getElementById("puzzle-screen").classList.add("hidden");
+      hearts = [];
+
+      if (mode === "college") {
+        document.getElementById("stage-badge").innerText = "Scene 1: College Campus";
+        document.getElementById("step-instruction").innerText =
+          "Joystick se Babe ko chala kar Jaanii ke paas le jao aur PROPOSE dabao ❤️";
+        document.getElementById("action-btn").innerText = "PROPOSE";
+        babe.x = W * 0.25;
+        babe.y = H * 0.72;
+        jaanii.x = W * 0.72;
+        jaanii.y = H * 0.38;
+        jaanii.visible = true;
+        proposed = false;
+      } else if (mode === "bus") {
+        document.getElementById("stage-badge").innerText = "Scene 2: Bus Ride";
+        document.getElementById("step-instruction").innerText =
+          "Chalti bus ki khidki ke paas baithkar ek dusre ka haath pakadne ke liye HOLD HANDS dabao 🤝";
+        document.getElementById("action-btn").innerText = "HANDS";
+        document.getElementById("dialogue-text").innerText =
+          "Bus chal rahi hai... Babe aur Jaanii ek dusre ka haath pakad kar khubsoorat pal bita rahe hain.";
+        document.getElementById("dialogue-banner").classList.remove("hidden");
+      } else if (mode === "cafe") {
+        document.getElementById("stage-badge").innerText = "Scene 3: Cafe Date";
+        document.getElementById("step-instruction").innerText =
+          "Babe ko chala kar Cafe Table par cake ke paas Jaanii ke saamne baithao 🎂";
+        document.getElementById("action-btn").innerText = "CAKE";
+        babe.x = W * 0.25;
+        babe.y = H * 0.72;
+        jaanii.x = W * 0.58;
+        jaanii.y = H * 0.42;
+        jaanii.visible = true;
+        villain.visible = false;
+        kidnapped = false;
+      } else if (mode === "level1") {
+        document.getElementById("stage-badge").innerText = "Padav 1 / 5: Mystic River";
+        document.getElementById("step-instruction").innerText =
+          "Step 1: Nadi tairkar paar karo, magarmachh se bacho, aur upar Gate par pahunch kar CHECK dabao.";
+        document.getElementById("action-btn").innerText = "CHECK";
+        babe.x = W / 2;
+        babe.y = H - 85;
+        crocs = [
+          { x: 60, y: H * 0.46, dir: 1, speed: 2.1 },
+          { x: W - 70, y: H * 0.62, dir: -1, speed: 2.4 }
+        ];
+        stones = [
+          { x: W * 0.24, y: H * 0.37, label: "07" },
+          { x: W * 0.50, y: H * 0.37, label: "12" },
+          { x: W * 0.76, y: H * 0.37, label: "19" }
+        ];
+      } else if (mode === "level2") {
+        document.getElementById("stage-badge").innerText = "Padav 2 / 5: Taste Vault";
+        document.getElementById("step-instruction").innerText =
+          "Step 2: Silent Taste Vault ke darwaze tak chal kar jao aur CHECK dabao.";
+        document.getElementById("action-btn").innerText = "CHECK";
+        babe.x = W / 2;
+        babe.y = H - 100;
+      } else if (mode === "level3") {
+        document.getElementById("stage-badge").innerText = "Padav 3 / 5: Mist Labyrinth";
+        document.getElementById("step-instruction").innerText =
+          "Step 3: Bhool-bhulaiya ke exit gate tak pahunch kar CHECK dabao.";
+        document.getElementById("action-btn").innerText = "CHECK";
+        babe.x = W / 2;
+        babe.y = H - 100;
+      } else if (mode === "level4") {
+        document.getElementById("stage-badge").innerText = "Padav 4 / 5: Shadow Laser";
+        document.getElementById("step-instruction").innerText =
+          "Step 4: Laser beam ke saamne Shadow Lock par pahunch kar CHECK dabao.";
+        document.getElementById("action-btn").innerText = "CHECK";
+        babe.x = W / 2;
+        babe.y = H - 100;
+      } else if (mode === "level5") {
+        document.getElementById("stage-badge").innerText = "Padav 5 / 5: Final Cage";
+        document.getElementById("step-instruction").innerText =
+          "Step 5: Kamre mein chhupi 3 Golden Keys par chal kar ikattha karo, phir Jaanii ke pinjre par CHECK dabao!";
+        document.getElementById("action-btn").innerText = "CHECK";
+        babe.x = W / 2;
+        babe.y = H - 95;
+        keysCollected = [false, false, false];
+        roomKeys = [
+          { x: 55, y: 175, found: false },
+          { x: W - 55, y: 245, found: false },
+          { x: 65, y: H - 220, found: false }
+        ];
+      }
+    }
+
+    function advanceScene() {
+      if (mode === "college") setupMode("bus");
+      else if (mode === "bus") setupMode("cafe");
+      else if (mode === "cafe") setupMode("level1");
+    }
+
+    function spawnHearts(x, y, count = 1
